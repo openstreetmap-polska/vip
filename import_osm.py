@@ -10,10 +10,10 @@ OVERPASS_INT_URL = 'https://overpass.kumi.systems/api/interpreter'
 
 # zapytanie do osm
 overpass_query = """
-    [out:json][timeout:1000];area(id:3600224457)->.ds;
+    [out:json][timeout:90];area(id:3600049715)->.pl;
     (
-    nw["indoormark"="beacon"](area.searchArea);
-    nw["traffic_signals:sound"](area.searchArea);
+    nw["indoormark"="beacon"](area.pl);
+    nw["traffic_signals:sound"](area.pl);
     );
     out center;
     """
