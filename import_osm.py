@@ -1,43 +1,75 @@
 import requests
-import pandas as pd
-import geopandas as gpd
+
+from osm2geojson import json2geojson
+
+import json
+import logging
+
+from time import sleep
+from typing import Any, Dict, Optional
 
 
-from IPython.core.display import HTML
+OVERPASS_API_URL = 'https://lz4.overpass-api.de/api/interpreter'
+OVERPASS_QUERY_FILE = 'overpass_query.txt'
 
-# parametry
-OVERPASS_INT_URL = 'https://overpass.kumi.systems/api/interpreter'
+OVERPASS_RETRIES = 5
+OVERPASS_TIMEOUT = 30  # seconds
 
-# zapytanie do osm
-overpass_query = """
-    [out:json][timeout:90];area(id:3600049715)->.pl;
-    (
-    nw["indoormark"="beacon"](area.pl);
-    nw["traffic_signals:sound"](area.pl);
-    );
-    out center;
-    """
-
-# generowanie zapytania do overpassa
-response = requests.get(OVERPASS_INT_URL, params = {'data': overpass_query})
-if response.ok:
-  data = response.json()
-  print('Dane pobrane!')
-else:
-  display(HTML(response.text))
+GEOJSON_FILENAME = 'data.geojson'
 
 
-# standaryzowanie danych
-df = pd.json_normalize(data['elements'])
-df['lat'].fillna(df['center.lat'], inplace=True)
-df['lon'].fillna(df['center.lon'], inplace=True)
-df.columns = df.columns.str.replace("tags.","")
-df.drop(['nodes', 'center.lat', 'center.lon','phone '], axis=1, inplace=True, errors='ignore')
-df.columns.drop(list(df.filter(regex='payment:')))
-print('Dane zestandaryzowane')
+def download_data() -> Optional[Dict[Any, Any]]:
+    with open(OVERPASS_QUERY_FILE, 'r') as f:
+        query = f.read().strip()
+
+    logging.info(f'Read overpass query from file: {OVERPASS_QUERY_FILE}')
+    logging.info(f'Downloading overpass data...')
+    for _ in range(OVERPASS_RETRIES):
+        try:
+            response = requests.get(OVERPASS_API_URL, params={'data': query})
+            if response.status_code != 200:
+                logging.warning(
+                    f'Incorrect status code: {response.status_code}'
+                )
+                continue
+
+            return response.json()
+
+        except Exception as e:
+            logging.error(f'Error with downloading/parsing data: {e}')
+
+        sleep(OVERPASS_TIMEOUT)
 
 
-# tworzenie geojson
-gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.lon, df.lat))
-gdf.to_file("out.geojson", driver='GeoJSON')
+def filter_data(overpass_data: Dict[str, Any]) -> Dict[str, Any]:
+    # TODO implement it
+    # remove tags: phone=*, payment=* and payment:*=*
+    return overpass_data
 
+
+def main():
+    logging.basicConfig(
+        format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+        datefmt='%Y-%m-%d,%H:%M:%S',
+        level=logging.INFO
+    )
+
+    overpass_data = download_data()
+    if overpass_data is None:
+        logging.info('Empty overpass data. Exiting!')
+        exit(1)
+
+    logging.info(f'Filtering data...')
+    overpass_data = filter_data(overpass_data)
+
+    logging.info(f'Parsing overpass data to geojson...')
+    geojson = json2geojson(overpass_data)
+
+    with open(GEOJSON_FILENAME, 'w') as f:
+        json.dump(geojson, f)
+
+    logging.info(f'Saved geojson to file.')
+
+
+if __name__ == '__main__':
+    main()

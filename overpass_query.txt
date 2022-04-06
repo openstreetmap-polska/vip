@@ -1,0 +1,1 @@
+[out:json][timeout:900];area(3600049715)->.pl;(nwr["indoormark"="beacon"](area.pl);nwr["traffic_signals:sound"](area.pl););out center;
