@@ -67,15 +67,18 @@
 
             return tags;
         }
-        function createCircleMarker(feature, latlng){
-          const options = {
-            radius: 7,
-            fillColor: 'lightblue',
-            color: 'black',
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.5
-          }
+
+        function createCircleMarker(feature, latlng, options = null){
+            if (!options){
+                options = {
+                  radius: 7,
+                  fillColor: 'lightblue',
+                  color: 'black',
+                  weight: 1,
+                  opacity: 1,
+                  fillOpacity: 0.5
+                };
+            }
 
           const content = `
             <h2>ID: <a href=https://openstreetmap.org/${feature['properties']['type']}/${feature['properties']['id']}/>${feature['properties']['id']}</a>
@@ -88,21 +91,51 @@
           );
         }
 
-        async function loadData(map){
-            fetch('./data.geojson')
-                .then(response => response.json())
-                .then(data => new L.GeoJSON(data, {pointToLayer: createCircleMarker}).addTo(map))
-                .catch(error => console.log(error));
+        async function loadData(map, baseLayers, markerOptions){
+            const indoormarks = await fetch('./osm_data/indoormark.geojson').then(response => response.json());
+            const trafficSignals = await fetch('./osm_data/traffic_signals.geojson').then(response => response.json());
+
+            const indoormarkOptions = {
+                radius: 7,
+                fillColor: 'lightblue',
+                color: 'black',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.5
+            };
+            const trafficSignalsOptions = {
+                radius: 7,
+                fillColor: 'yellow',
+                color: 'mediumblue',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.5
+            };
+
+            const overlays = {
+                'Indoormark beacon': new L.GeoJSON(
+                    indoormarks,
+                    {pointToLayer: (feature, latlng) => createCircleMarker(feature, latlng, indoormarkOptions)}
+                ).addTo(map),
+                'Traffic signals': new L.GeoJSON(
+                    trafficSignals,
+                    {pointToLayer: (feature, latlng) => createCircleMarker(feature, latlng, trafficSignalsOptions)}
+                ).addTo(map),
+            }
+
+            L.control.layers(baseLayers, overlays).addTo(map);
         }
 
         const map = L.map('map').setView([52.197, 19.987], 7);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; autorzy <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-            preferCanvas: false,
-        }).addTo(map);
+        const baseLayers = {
+            'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; autorzy <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                preferCanvas: false,
+            }).addTo(map),
+        }
         map.addControl(new L.Control.Fullscreen());
 
-        loadData(map);
+        loadData(map, baseLayers, null);
     </script>
 </html>

@@ -65,6 +65,21 @@
 
             return tags;
         }
+
+        function onMarkerClick(e) {
+            const feature = e.features[0];
+            const content = `
+              <h2>ID: <a href=https://openstreetmap.org/${feature['properties']['type']}/${feature['properties']['id']}/>${feature['properties']['id']}</a>
+              <hr>
+              <h3>Znaczniki:</h3>
+              ${createTagListPopup(feature)}
+            `;
+            new maplibregl.Popup()
+                .setLngLat(feature.geometry.coordinates.slice())
+                .setHTML(content)
+                .addTo(map);
+        }
+
         var map = new maplibregl.Map({
             container: 'map',
             style: {
@@ -95,14 +110,14 @@
         });
 
         map.on('load', function () {
-            map.addSource('vip-data', {
+            map.addSource('indoormark-data', {
                 type: 'geojson',
-                data: './data.geojson'
+                data: './osm_data/indoormark.geojson'
             });
             map.addLayer({
-                'id': 'vip-data-layer',
+                'id': 'indoormark-data-layer',
                 'type': 'circle',
-                'source': 'vip-data',
+                'source': 'indoormark-data',
                 'layout': {},
                 'paint': {
                     'circle-color': '#87CEFA',
@@ -113,20 +128,28 @@
                     'circle-stroke-color': '#2A77EB'
                 }
             });
+            map.addSource('traffic-signals-data', {
+                type: 'geojson',
+                data: './osm_data/traffic_signals.geojson'
+            });
+            map.addLayer({
+                'id': 'traffic-signals-data-layer',
+                'type': 'circle',
+                'source': 'traffic-signals-data',
+                'layout': {},
+                'paint': {
+                    'circle-color': 'yellow',
+                    'circle-opacity': 0.5,
+                    'circle-radius': 7,
+                    'circle-stroke-width': 2,
+                    'circle-stroke-opacity': 1,
+                    'circle-stroke-color': 'mediumblue'
+                }
+            });
         });
-        map.on('click', 'vip-data-layer', (e) => {
-            const feature = e.features[0];
-            const content = `
-              <h2>ID: <a href=https://openstreetmap.org/${feature['properties']['type']}/${feature['properties']['id']}/>${feature['properties']['id']}</a>
-              <hr>
-              <h3>Znaczniki:</h3>
-              ${createTagListPopup(feature)}
-            `;
-            new maplibregl.Popup()
-                .setLngLat(feature.geometry.coordinates.slice())
-                .setHTML(content)
-                .addTo(map);
-        });
+        map.on('click', 'indoormark-data-layer', (e) => onMarkerClick(e));
+        map.on('click', 'traffic-signals-data-layer', (e) => onMarkerClick(e));
+
         map.dragRotate.disable();
         map.touchZoomRotate.disableRotation();
         map.scrollZoom.setWheelZoomRate(0.007)
