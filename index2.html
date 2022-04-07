@@ -95,5 +95,7 @@
         map.touchZoomRotate.disableRotation();
         map.scrollZoom.setWheelZoomRate(0.007)
 
+        map.addControl(new maplibregl.NavigationControl());
+        map.addControl(new maplibregl.FullscreenControl());
     </script>
 </html>
