@@ -145,6 +145,12 @@
                 attribution: '&copy; autorzy <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                 preferCanvas: true,
             }).addTo(map),
+            'Geoportal: Ortofotomapa': L.tileLayer.wms("https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution", {
+                maxZoom: 20,
+                layers: 'Raster',
+                format: 'image/jpeg',
+                attribution: "Geoportal.gov.pl"
+            })
         }
         loadData(map, baseLayers, null);
         map.addControl(new L.Control.Fullscreen());
