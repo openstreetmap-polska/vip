@@ -146,8 +146,20 @@
                 preferCanvas: true,
             }).addTo(map),
         }
+        loadData(map, baseLayers, null);
         map.addControl(new L.Control.Fullscreen());
 
-        loadData(map, baseLayers, null);
+        // Handle URL coordinates
+        map.on('moveend', (e) => {
+            let { lat, lng } = e.target.getCenter();
+            lat = lat.toFixed(5);
+            lng = lng.toFixed(5);
+            window.location.hash = `/${map.getZoom()}/${lat}/${lng}`;
+        });
+        const hash = window.location.hash;
+        if (hash){
+            let [zoom, lat, lng] = window.location.hash.slice(2).split('/');
+            map.setView(new L.LatLng(parseFloat(lat), parseFloat(lng)), parseInt(zoom));
+        }
     </script>
 </html>
