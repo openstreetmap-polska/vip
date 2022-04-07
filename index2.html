@@ -87,7 +87,7 @@
         });
         map.on('click', 'vip-data-layer', (e) => {
             new maplibregl.Popup()
-                .setLngLat(e.lngLat)
+                .setLngLat(e.features[0].geometry.coordinates.slice())
                 .setHTML(`<a href=https://openstreetmap.org/${e.features[0]['properties']['type']}/${e.features[0]['properties']['id']}/>Otwórz obiekt ${e.features[0]['properties']['id']} w OSM</a>`)
                 .addTo(map);
         });
