@@ -4,25 +4,37 @@ from osm2geojson import json2geojson
 
 import json
 import logging
+import os
 
 from time import sleep
 from typing import Any, Dict, Optional
 
 
+QUERY_DIR = 'queries'
+RESULT_DIR = 'osm_data'
+
+CFG_LAYERS = [
+    {
+        'query_filename': os.path.join(QUERY_DIR, 'indoormark.ql'),
+        'result_filename': os.path.join(RESULT_DIR, 'indoormark.geojson'),
+    },
+    {
+        'query_filename': os.path.join(QUERY_DIR, 'traffic_signals.ql'),
+        'result_filename': os.path.join(RESULT_DIR, 'traffic_signals.geojson'),
+    },
+]
+
 OVERPASS_API_URL = 'https://lz4.overpass-api.de/api/interpreter'
-OVERPASS_QUERY_FILE = 'overpass_query.txt'
 
 OVERPASS_RETRIES = 5
 OVERPASS_TIMEOUT = 30  # seconds
 
-GEOJSON_FILENAME = 'data.geojson'
 
-
-def download_data() -> Optional[Dict[Any, Any]]:
-    with open(OVERPASS_QUERY_FILE, 'r') as f:
+def download_data(overpass_query_file: str) -> Optional[Dict[Any, Any]]:
+    with open(overpass_query_file, 'r') as f:
         query = f.read().strip()
 
-    logging.info(f'Read overpass query from file: {OVERPASS_QUERY_FILE}')
+    logging.info(f'Read overpass query from file: {overpass_query_file}')
     logging.info(f'Downloading overpass data...')
     for _ in range(OVERPASS_RETRIES):
         try:
@@ -64,21 +76,22 @@ def main():
         level=logging.INFO
     )
 
-    overpass_data = download_data()
-    if overpass_data is None:
-        logging.info('Empty overpass data. Exiting!')
-        exit(1)
+    for layer in CFG_LAYERS:
+        overpass_data = download_data(layer['query_filename'])
+        if overpass_data is None:
+            logging.info('Empty overpass data. Exiting!')
+            exit(1)
 
-    logging.info(f'Filtering data...')
-    overpass_data = filter_data(overpass_data)
+        logging.info(f'Filtering data...')
+        overpass_data = filter_data(overpass_data)
 
-    logging.info(f'Parsing overpass data to geojson...')
-    geojson = json2geojson(overpass_data)
+        logging.info(f'Parsing overpass data to geojson...')
+        geojson = json2geojson(overpass_data)
 
-    with open(GEOJSON_FILENAME, 'w') as f:
-        json.dump(geojson, f)
+        with open(layer['result_filename'], 'w') as f:
+            json.dump(geojson, f)
 
-    logging.info(f'Saved geojson to file.')
+        logging.info(f'Saved {layer["result_filename"]}.')
 
 
 if __name__ == '__main__':
