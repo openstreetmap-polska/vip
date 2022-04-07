@@ -57,12 +57,13 @@
                         'type': 'raster',
                         'source': 'raster-tiles',
                         'minzoom': 0,
-                        'maxzoom': 19
+                        'maxZoom': 19
                     }
                 ]
             },
             center: [19.987, 52.197],
-            zoom: 6
+            zoom: 6,
+            maxZoom: 19,
         });
 
         map.on('load', function () {
