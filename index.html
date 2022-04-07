@@ -21,13 +21,31 @@
                 width: 100%;
                 height: calc( 100vh - 5em );
             }
+
+            ul{
+                list-style-type: none;
+                margin: 0px;
+                padding: 0px;
+            }
+
+            h1 {
+                font-size: 20px;
+                display: inline-block;
+            }
+            h2 {
+                font-size: 18px;
+            }
+
+            h3 {
+                font-size: 16px;
+            }
         </style>
     </head>
     <body>
         <nav class="navbar navbar-light bg-light navbar-fixed-top">
           <div class="container-fluid">
             <a class="navbar-brand" href="https://openstreetmap.org.pl/">
-              Mapa VIP | tworzona z ❤️ przez OpenStreetMap Polska
+              <h1>Mapa VIP</h1> | tworzona z ❤️ przez OpenStreetMap Polska
             </a>
           </div>
         </nav>
@@ -40,7 +58,16 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
     <script type="text/javascript">
-        function createCircleMarker(feature, latlng ){
+        function createTagListPopup(feature){
+            let tags = '<ul>';
+            Object.entries(feature['properties']['tags']).forEach(([key, value]) => {
+                tags += `<li>${key} = ${value}</li>`;
+            });
+            tags += '</ul>';
+
+            return tags;
+        }
+        function createCircleMarker(feature, latlng){
           const options = {
             radius: 7,
             fillColor: 'lightblue',
@@ -50,8 +77,14 @@
             fillOpacity: 0.5
           }
 
+          const content = `
+            <h2>ID: <a href=https://openstreetmap.org/${feature['properties']['type']}/${feature['properties']['id']}/>${feature['properties']['id']}</a>
+            <hr>
+            <h3>Znaczniki:</h3>
+            ${createTagListPopup(feature)}
+          `;
           return L.circleMarker(latlng, options).bindPopup(
-            `<a href=https://openstreetmap.org/${feature['properties']['type']}/${feature['properties']['id']}/>Otwórz obiekt ${feature['properties']['id']} w OSM</a>`
+            content
           );
         }
 
