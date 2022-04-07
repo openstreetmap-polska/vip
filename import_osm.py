@@ -42,8 +42,18 @@ def download_data() -> Optional[Dict[Any, Any]]:
 
 
 def filter_data(overpass_data: Dict[str, Any]) -> Dict[str, Any]:
-    # TODO implement it
-    # remove tags: phone=*, payment=* and payment:*=*
+    for element in overpass_data['elements']:
+        if 'tags' not in element:
+            continue
+
+        element['tags'].pop('phone', None)
+        element['tags'].pop('payment', None)
+
+        tags = element['tags']
+        for key in tags.keys():
+            if key.startswith('payment:'):
+                element['tags'].pop(key)
+
     return overpass_data
 
 
