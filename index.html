@@ -7,6 +7,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
         <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
         <style>
             html, body, #container {
                 height: 100%;
@@ -57,6 +59,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script type="text/javascript">
         function createTagListPopup(feature){
             let tags = '<ul>';
@@ -112,15 +115,24 @@
                 fillOpacity: 0.5
             };
 
+            const overlayTrafficSignals = L.markerClusterGroup();
+            overlayTrafficSignals.addLayer(new L.GeoJSON(
+                trafficSignals,
+                {
+                    pointToLayer: (feature, latlng) => createCircleMarker(feature, latlng, trafficSignalsOptions)
+                }
+            ));
+
+            const overlayIndoormark = L.markerClusterGroup();
+            overlayIndoormark.addLayer(new L.GeoJSON(
+                indoormarks,
+                {
+                    pointToLayer: (feature, latlng) => createCircleMarker(feature, latlng, indoormarkOptions)
+                }
+            ));
             const overlays = {
-                'Indoormark beacon': new L.GeoJSON(
-                    indoormarks,
-                    {pointToLayer: (feature, latlng) => createCircleMarker(feature, latlng, indoormarkOptions)}
-                ).addTo(map),
-                'Traffic signals': new L.GeoJSON(
-                    trafficSignals,
-                    {pointToLayer: (feature, latlng) => createCircleMarker(feature, latlng, trafficSignalsOptions)}
-                ).addTo(map),
+                'Indoormark beacon': overlayIndoormark,
+                'Traffic Signals': overlayTrafficSignals,
             }
 
             L.control.layers(baseLayers, overlays, {collapsed: false}).addTo(map);
@@ -131,7 +143,7 @@
             'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; autorzy <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                preferCanvas: false,
+                preferCanvas: true,
             }).addTo(map),
         }
         map.addControl(new L.Control.Fullscreen());
