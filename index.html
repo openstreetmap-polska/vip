@@ -135,7 +135,8 @@
                 'Traffic Signals': overlayTrafficSignals,
             }
 
-            L.control.layers(baseLayers, overlays, {collapsed: false}).addTo(map);
+            L.control.layers(baseLayers, null, {collapsed: false}).addTo(map);
+            L.control.layers(overlays, null, {collapsed: false}).addTo(map);
         }
 
         const map = L.map('map').setView([52.197, 19.987], 7);
