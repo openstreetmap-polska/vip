@@ -15,11 +15,17 @@ RESULT_DIR = 'osm_data'
 
 CFG_LAYERS = [
     {
-        'query_filename': os.path.join(QUERY_DIR, 'indoormark.ql'),
+        'query_filename': os.path.join(
+            QUERY_DIR,
+            'indoormark.overpassql'
+        ),
         'result_filename': os.path.join(RESULT_DIR, 'indoormark.geojson'),
     },
     {
-        'query_filename': os.path.join(QUERY_DIR, 'traffic_signals.ql'),
+        'query_filename': os.path.join(
+            QUERY_DIR,
+            'traffic_signals.overpassql'
+        ),
         'result_filename': os.path.join(RESULT_DIR, 'traffic_signals.geojson'),
     },
 ]
